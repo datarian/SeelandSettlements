@@ -1,0 +1,12 @@
+name: PrehistoricSeeland
+title: PrehistoricSeeland
+username:
+account: datarian
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 329869
+bundleId: 1340295
+url: https://datarian.shinyapps.io/PrehistoricSeeland/
+when: 1524728364.11235
+asMultiple: FALSE
+asStatic: FALSE
