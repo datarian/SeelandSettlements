@@ -7,11 +7,19 @@ wood_list_raw <- read.delim("./data/Gesamtholzliste_Bielersee.txt",
 
 
 wood_list <- wood_list_raw %>%
-    dplyr::filter(!is.na(xLK95)) %>%
-    dplyr::select(Gemeinde,Flur,DNr,Qf,Fo,xLK95,yLK95) %>%
+    dplyr::select(Gemeinde,Flur,DNr,Qf,Fo,xLK,yLK,xLK95,yLK95) %>%
     dplyr::rename(Nr = DNr) %>%
     dplyr::mutate(Nr = as.integer(Nr)) %>%
     dplyr::filter(!is.na(Nr))
+
+LK95 <- wood_list %>%
+    dplyr::filter(!is.na(xLK95))
+
+LK95nrs <- LK95$Nr
+
+LK03 <- wood_list %>%
+    dplyr::filter(!is.na(xLK)) %>%
+    dplyr::filter(!Nr %in% LK95nrs)
 
 dated_woods <- dated_woods_raw %>%
     dplyr::filter(!is.na(Dat)) %>%
@@ -21,59 +29,23 @@ dated_woods <- dated_woods_raw %>%
 dated_woods$WK <- as.integer(dated_woods$WK)
 #levels(dated_woods$WK) <- sub("^>[0-9]{1,3}", "",levels(dated_woods$WK))
 
-combined_coords_dates <- dplyr::left_join(dated_woods,wood_list,by="Nr") %>% filter(!is.na(xLK95))
-summary(combined_coords_dates)
+combined_coordsLK03_dates <- dplyr::left_join(dated_woods,LK03,by="Nr") %>% filter(!is.na(yLK))
+combined_coordsLK95_dates <- dplyr::left_join(dated_woods,LK95,by="Nr") %>% filter(!is.na(yLK95))
 
 # Initialize a spatial points object with the CH95 projection
-coords <- SpatialPoints(cbind(combined_coords_dates$xLK95,combined_coords_dates$yLK95), proj4string = CRS("+init=epsg:2056"))
+coordsLK95 <- SpatialPoints(cbind(combined_coordsLK95_dates$xLK95,combined_coordsLK95_dates$yLK95), proj4string = CRS("+init=epsg:2056"))
+coordsLK03 <- SpatialPoints(cbind(combined_coordsLK03_dates$xLK,combined_coordsLK03_dates$yLK), proj4string = CRS("+init=epsg:21781"))
 
 #Transform to WGS84:
-coords <- spTransform(spatial_object, CRS("+init=epsg:4326"))
+coords95 <- spTransform(coordsLK95, CRS("+init=epsg:4326"))
+coords03 <- spTransform(coordsLK03, CRS("+init=epsg:4326"))
 
 # Combine to a spdataframe together with the attributes
-spatial_data <- SpatialPointsDataFrame(coords,
-                                       combined_coords_dates[,-c(13,14)])
+spatial_data_LK95 <- SpatialPointsDataFrame(coords95,
+                                       combined_coordsLK95_dates[,-c(11,12,13,14)])
+spatial_data_LK03 <- SpatialPointsDataFrame(coords03,
+                                            combined_coordsLK03_dates[,-c(11,12,13,14)])
+
+spatial_data <- rbind(spatial_data_LK95,spatial_data_LK03)
 
 saveRDS(spatial_data,file="PrehistoricSeeland/data/woods_sp.Rds")
-
-
-# LK95WGS_lat <- function (y, x){
-#
-#     y_aux <- (y -  2600000)/1000000
-#     x_aux <- (x - 1200000)/1000000
-#
-#     ## Process lat
-#     lat <- {16.9023892 +
-#             3.238272 * x_aux -
-#             0.270978 * (y_aux^2) -
-#             0.002528 * (x_aux^2) -
-#             0.0447   * (y_aux^2) * x_aux -
-#             0.0140   * (x_aux^3)}
-#     lat <- lat * 100/36
-#     return(lat)
-# }
-#
-# LK95WGS_lng <- function (y, x){
-#
-#     y_aux <- (y - 2600000)/1000000
-#     x_aux <- (x - 1200000)/1000000
-#
-#     ## Process long
-#     lng <- {2.6779094 +
-#             4.728982 * y_aux +
-#             0.791484 * y_aux * x_aux +
-#             0.1306   * y_aux * (x_aux^2) -
-#             0.0436   * (y_aux^3)}
-#     lng <- lng * 100/36
-#     return(lng)
-# }
-#
-# combined_coords_dates$lat <- LK95WGS_lat(combined_coords_dates$xLK95,
-#                                            combined_coords_dates$yLK95)
-# combined_coords_dates$lng <- LK95WGS_lng(combined_coords_dates$xLK95,
-#                                            combined_coords_dates$yLK95)
-# combined_coords_dates <- combined_coords_dates %>% dplyr::select(-xLK95,-yLK95)
-#
-#
-#
-# saveRDS(combined_coords_dates, file = "./PrehistoricSeeland/data/wood.Rds")

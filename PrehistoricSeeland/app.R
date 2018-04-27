@@ -25,7 +25,10 @@ ui <- shinyUI(
                       width = 330, height = "auto",
                       uiOutput("year_range"),
                       br(),
-                      uiOutput("speed_value"))
+                      uiOutput("speed_value"),
+                      br(),
+                      uiOutput("wood_type"),
+                      br())
     ))
 
 # Prepare data:
@@ -71,16 +74,16 @@ server <- shinyServer(function(input, output, session) {
         1000/input$speed
     })
 
-        output$year_range <- renderUI({
-            sliderInput("year",
-                        "Time range",
-                        min = min_yr,
-                        max = max_yr,
-                        value = min_yr,
-                        step = 1,
-                        animate = animationOptions(interval = speedChange(),
-                                                   loop = T))
-        })
+    output$year_range <- renderUI({
+        sliderInput("year",
+                    "Time range",
+                    min = min_yr,
+                    max = max_yr,
+                    value = min_yr,
+                    step = 1,
+                    animate = animationOptions(interval = speedChange(),
+                                               loop = T))
+    })
 
     output$speed_value <- renderUI({
         sliderInput("speed",
@@ -90,15 +93,23 @@ server <- shinyServer(function(input, output, session) {
                     value = 1)
     })
 
-    output$map <- renderLeaflet({
+    output$select_wood <- renderUI({
+        radioButtons("wood_type",
+                     label = "Select wood to display",
+                     choices = list("All" = 1, "Bark only" = 2, "Splint only" = 3),
+                     selected = 1)
+    })
+
+    map <- renderLeaflet({
         leaflet() %>%
             addProviderTiles(providers$Stamen.TonerLite,
                              options = providerTileOptions(noWrap = TRUE)
             ) %>%
             setView(lng = center_lng, lat = center_lat,zoom=12)
-            #fitBounds(sp::bbox(spatial_data)[1,1],sp::bbox(spatial_data)[1,2],
-                      #sp::bbox(spatial_data)[2,1],sp::bbox(spatial_data)[2,2])
+
     })
+
+    output$map <- map
 
     # Each independent set of things that can change
     # should be managed in its own observer.
@@ -107,13 +118,15 @@ server <- shinyServer(function(input, output, session) {
             clearMarkers() %>%
             clearMarkerClusters() %>%
             addCircleMarkers(stroke=FALSE,
-                             #lat = ~lat,
-                             #lng = ~lng,
                              fillOpacity=~show,
                              fillColor = ~ifelse(is.na(WK),"#C33","#096"),
                              radius = 5,
+                             label = ~HTML(paste(sep = "<br />",
+                                              span(strong(Titel)),
+                                              span(paste0("Nr. of rings: ",Anz)))),
                              clusterOptions = markerClusterOptions(
-                                 spiderfyOnMaxZoom = T,
+                                 spiderfyOnMaxZoom = F,
+                                 disableClusteringAtZoom = 19,
                                  zoomToBoundsOnClick = T))
     })
 })
