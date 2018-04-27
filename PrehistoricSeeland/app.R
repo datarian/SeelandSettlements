@@ -44,28 +44,21 @@ center_lat <- mean(spatial_data@coords[,2])
 
 server <- shinyServer(function(input, output, session) {
 
-
-    adjustDisplay <- function(d){
-        d$show <- ifelse(d$show > 0.1, d$show-0.1, d$show)
-    }
-
     markers <- eventReactive(input$year,{
         req(input$year)
 
         if(nrow(display) > 0){
-            apply(display@data, 1, adjustDisplay)
+            display$show <- round(display$show-0.1,1)
+            display <<- display[(display$show - 0.1) >= 1e-5,]
         }
-
-        if(nrow(display) > 0){
-            display <- adjustDisplay(display)
-        }
+        print(display)
 
         newDisplay <- spatial_data[spatial_data$Dat == input$year,]
+
         if(nrow(newDisplay) > 0){
             newDisplay$show <- 1.0 # set show to initial value
-            display <- rbind(display,newDisplay)
+            display <<- rbind(display,newDisplay)
         }
-
         display
     })
 

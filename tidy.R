@@ -42,9 +42,9 @@ coords03 <- spTransform(coordsLK03, CRS("+init=epsg:4326"))
 
 # Combine to a spdataframe together with the attributes
 spatial_data_LK95 <- SpatialPointsDataFrame(coords95,
-                                       combined_coordsLK95_dates[,-c(11,12,13,14)])
+                                       combined_coordsLK95_dates[,-c(13,14,15,16)])
 spatial_data_LK03 <- SpatialPointsDataFrame(coords03,
-                                            combined_coordsLK03_dates[,-c(11,12,13,14)])
+                                            combined_coordsLK03_dates[,-c(13,14,15,16)])
 
 spatial_data <- rbind(spatial_data_LK95,spatial_data_LK03)
 
