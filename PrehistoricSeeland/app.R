@@ -12,8 +12,8 @@ spatial_data$alpha <- rep(0,nrow(spatial_data))
 
 
 display <- spatial_data[FALSE,] # initialize empty display data.frame
-min_yr <- min(spatial_data$Dat)
-max_yr <- max(spatial_data$Dat)
+min_yr <- min(spatial_data$Dat) - 5
+max_yr <- max(spatial_data$Dat) + 5
 
 center_lng <- mean(spatial_data@coords[,1])
 center_lat <- mean(spatial_data@coords[,2])
