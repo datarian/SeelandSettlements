@@ -30,6 +30,7 @@ ui <- shinyUI(
                         z-index:2000;}
              .glyphicon {font-size: 2em;}'
             ))),
+        tags$head(singleton(tags$script(src = 'shiny-events.js'))),
         titlePanel("Prehistoric Seeland settlements in time"),
 
         leafletOutput("map", width="100%", height="100%"),
@@ -40,7 +41,13 @@ ui <- shinyUI(
                       width = 330, height = "auto",
                       uiOutput("year_range"),
                       br(),
-                      uiOutput("speed_value"),
+                      sliderInput("speed",
+                                  "Geschwindigkeit der Animation",
+                                  min = 100,
+                                  max= 500,
+                                  value = 100,
+                                  step = 100,
+                                  ticks = F),
                       br(),
                       uiOutput("select_wood"),
                       br())
@@ -55,9 +62,9 @@ server <- shinyServer(function(input, output, session) {
                     "Zeit",
                     min = min_yr,
                     max = max_yr,
-                    value = min_yr,
+                    value = isolate(animation$year),
                     step = 1,
-                    animate = animationOptions(interval = speedChange(),
+                    animate = animationOptions(interval = animation$speed,
                                                loop = T,
                                                playButton = HTML('<span class="play">
                                                                   <i class="glyphicon glyphicon-play"></i>
@@ -67,12 +74,17 @@ server <- shinyServer(function(input, output, session) {
                                                                    </span>')))
     })
 
-    output$speed_value <- renderUI({
-        sliderInput("speed",
-                    "Geschwindigkeit der Animation",
-                    min = 1,
-                    max= 5,
-                    value = 1)
+    # update animation interval
+    animation <- reactiveValues(speed = 100, year=min_yr)
+
+    observeEvent(input$speed, {
+        invalidateLater(500, session)
+        animation$speed <- input$speed
+        animation$year <- input$year
+    })
+
+    observeEvent(input$speed, {
+        session$sendCustomMessage('resume', TRUE)
     })
 
     output$select_wood <- renderUI({
