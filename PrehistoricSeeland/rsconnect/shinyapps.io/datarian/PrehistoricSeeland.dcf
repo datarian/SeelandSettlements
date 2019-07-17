@@ -5,8 +5,9 @@ account: datarian
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 329869
-bundleId: 1345463
+bundleId: 2236797
 url: https://datarian.shinyapps.io/PrehistoricSeeland/
-when: 1524987816.8338
+when: 1563278060.26143
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: data/woods_geojson.Rds

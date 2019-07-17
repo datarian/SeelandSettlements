@@ -1,168 +1,133 @@
 library(shiny)
 library(leaflet)
-library(dplyr)
 library(shinyjs)
 library(logging)
 library(htmltools)
-library(sp)
 
-# Prepare data:
-spatial_data <- readRDS("./data/woods_sp.Rds") # Read spdataframe
-spatial_data$alpha <- rep(0,nrow(spatial_data))
+source("helpers.R")
 
-
-display <- spatial_data[FALSE,] # initialize empty display data.frame
-min_yr <- min(spatial_data$Dat) - 5
-max_yr <- max(spatial_data$Dat) + 5
-
-center_lng <- mean(spatial_data@coords[,1])
-center_lat <- mean(spatial_data@coords[,2])
-
-colorWood <- colorFactor(palette='Spectral',levels=c(0,1))
+init <- prepareMap(spatial_data)
 
 # Define UI for application that draws a histogram
-ui <- shinyUI(
-    fillPage(
-        tags$head(tags$style(
-            HTML('
-             #controls {background-color: rgba(255,255,255,0.8);
-                        padding: 4em;
-                        z-index:2000;}
-             .glyphicon {font-size: 2em;}'
-            ))),
-        tags$head(singleton(tags$script(src = 'shiny-events.js'))),
-        titlePanel("Prehistoric Seeland settlements in time"),
-
-        leafletOutput("map", width="100%", height="100%"),
-
-        absolutePanel(id = "controls", class = "panel panel-default",
-                      fixed = TRUE, draggable = TRUE, top = 60,
-                      left = "auto", right = 20, bottom = "auto",
-                      width = 330, height = "auto",
-                      uiOutput("year_range"),
-                      br(),
-                      sliderInput("speed",
-                                  "Geschwindigkeit der Animation",
-                                  min = 100,
-                                  max= 500,
-                                  value = 100,
-                                  step = 100,
-                                  ticks = F),
-                      br(),
-                      uiOutput("select_wood"),
-                      br())
-    ))
-
+ui <- fillPage(
+  useShinyjs(),
+  tags$head(tags$style(
+    HTML(
+      '
+       #controls {background-color: rgba(255,255,255,0.8);
+                  padding: 4em;
+                  z-index:2000;}
+       .glyphicon {font-size: 2em;}'
+    )
+  )),
+  tags$head(singleton(tags$script(src = 'shiny-events.js'))),
+  titlePanel("Prehistoric Seeland settlements in time"),
+  leafletOutput("map", width = "100%", height = "100%"),
+  absolutePanel(
+    id = "controls",
+    class = "panel panel-default",
+    fixed = TRUE,
+    draggable = TRUE,
+    top = 60,
+    left = "auto",
+    right = 20,
+    bottom = "auto",
+    width = 330,
+    height = "auto",
+    uiOutput("year_range"),
+    br(),
+    sliderInput(
+      "speed",
+      "Geschwindigkeit der Animation",
+      min = 1,
+      max = 10,
+      value = 1,
+      step = 2,
+      ticks = F
+    ),
+    br(),
+    uiOutput("select_wood"),
+    br()
+  )
+)
 
 
 server <- shinyServer(function(input, output, session) {
+  output$map <- renderLeaflet(init$map)
 
-    output$year_range <- renderUI({
-        sliderInput("year",
-                    "Zeit",
-                    min = min_yr,
-                    max = max_yr,
-                    value = isolate(animation$year),
-                    step = 1,
-                    animate = animationOptions(interval = animation$speed,
-                                               loop = T,
-                                               playButton = HTML('<span class="play">
-                                                                  <i class="glyphicon glyphicon-play"></i>
-                                                                  </span>'),
-                                               pauseButton = HTML('<span class="pause">
-                                                                   <i class="glyphicon glyphicon-pause"></i>
-                                                                   </span>')))
-    })
+  output$year_range <- renderUI({
+    sliderInput(
+      "year",
+      "Zeit",
+      min = min_yr,
+      max = max_yr,
+      value = isolate(animation$year),
+      step = 1,
+      animate = animationOptions(
+        interval = animation$speed,
+        loop = T,
+        playButton = HTML(
+          '<span class="play">
+             <i class="glyphicon glyphicon-play"></i>
+           </span>'
+        ),
+        pauseButton = HTML(
+          '<span class="pause">
+             <i class="glyphicon glyphicon-pause"></i>
+           </span>'
+        )
+      )
+    )
+  })
 
-    # update animation interval
-    animation <- reactiveValues(speed = 100, year=min_yr)
+  # update animation interval
+  animation <- reactiveValues(speed = 100, year = min_yr)
 
-    observeEvent(input$speed, {
-        invalidateLater(500, session)
-        animation$speed <- input$speed
-        animation$year <- input$year
-    })
+  observeEvent(input$speed, {
+    invalidateLater(500, session)
+    animation$speed <- 1000 / input$speed
+    animation$year <- input$year
+  })
 
-    observeEvent(input$speed, {
-        session$sendCustomMessage('resume', TRUE)
-    })
+  observeEvent(input$speed, {
+    session$sendCustomMessage('resume', TRUE)
+  })
 
-    output$select_wood <- renderUI({
-        radioButtons("wood_type",
-                     label = "Holzauswahl",
-                     choices = list("Alle" = 1, "Waldkante" = 2, "Splintholz" = 3),
-                     selected = 1)
-    })
+  output$select_wood <- renderUI({
+    radioButtons(
+      "wood_type",
+      label = "Holzauswahl",
+      choices = list(
+        "Alle" = 1,
+        "Waldkante" = 2,
+        "Splintholz" = 3
+      ),
+      selected = 1
+    )
+  })
 
-    calcAlpha <- function(currentYear, sampleYear){
-        difference <- (currentYear - sampleYear + 1)
-        alpha <- ifelse(difference < 10, (10 - difference)/10,0)
+  speedChange <- eventReactive(input$speed, {
+    1000 / input$speed
+  })
+
+  # Each independent set of things that can change
+  # should be managed in its own observer.
+  observeEvent(input$year, {
+    g_wk <- paste0(WK_PREFIX, as.character(input$year))
+    g_nwk <- paste0(NWK_PREFIX, as.character(input$year))
+    hide_groups <-
+      init$all_groups[!init$all_groups %in% c(g_wk, g_nwk)]
+    if (g_wk %in% init$all_groups) {
+      leafletProxy("map") %>%
+        showGroup(g_wk)
     }
-
-    markers <- eventReactive(c(input$year,input$wood_type),{
-        req(input$year)
-        req(input$wood_type)
-
-        if(nrow(display) > 0){
-            for (i in 1:nrow(display)) {
-                display$alpha[i] <- calcAlpha(input$year, display$Dat[i])
-            }
-            display <<- display[display$alpha >= 1e-5,]
-        }
-
-        newDisplay <- spatial_data[spatial_data$Dat == input$year &
-                                       !(spatial_data$Nr %in% display$Nr),]
-
-        if(nrow(newDisplay) > 0){
-            newDisplay$alpha <- 1.0 # set alpha to initial value
-            display <<- rbind(display,newDisplay)
-        }
-
-        markers <- display
-
-        if(input$wood_type == 2){ # Only show WK woods
-            markers <- markers[!is.na(markers$WK),]
-        } else if(input$wood_type == 3){ # only show non-WK woods
-            markers <- markers[is.na(markers$WK),]
-        }
-
-        markers
-    })
-
-    speedChange <- eventReactive(input$speed,{
-        1000/input$speed
-    })
-
-
-
-    map <- renderLeaflet({
-        leaflet(options = leafletOptions(maxZoom = 20)) %>%
-            addProviderTiles(providers$Stamen.TonerLite,
-                             options = providerTileOptions(noWrap = TRUE)
-            ) %>%
-            setView(lng = center_lng, lat = center_lat,zoom=12)
-    })
-
-    output$map <- map
-
-    # Each independent set of things that can change
-    # should be managed in its own observer.
-    observe({
-        leafletProxy("map", data = markers()) %>%
-            clearMarkers() %>%
-            clearMarkerClusters() %>%
-            addCircleMarkers(stroke=FALSE,
-                             fillOpacity=~alpha,
-                             fillColor = ~colorWood(as.numeric(!is.na(WK))),
-                             radius = 5,
-                             label = ~HTML(paste(sep = "<br />",
-                                              span(strong(Titel)),
-                                              span(paste0("Nr.: ",Nr)))),
-                             clusterOptions = markerClusterOptions(
-                                 spiderfyOnMaxZoom = F,
-                                 disableClusteringAtZoom = 19,
-                                 zoomToBoundsOnClick = T))
-    })
+    if (g_nwk %in% init$all_groups) {
+      leafletProxy("map") %>%
+        showGroup(g_nwk)
+    }
+    leafletProxy("map") %>%
+      hideGroup(hide_groups)
+  })
 })
 
 shinyApp(ui, server)
