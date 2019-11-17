@@ -1,15 +1,21 @@
 library(dplyr)
 library(sp)
 
-dated_woods_raw <- read.delim("./data/belab.txt",header = T,stringsAsFactors = F)
-wood_list_raw <- read.delim("./data/Gesamtholzliste_Bielersee.txt",
-                            na.strings = c("-","---"),header=T,stringsAsFactors = F)
+dated_woods_raw <- read.csv("./data/belab.csv",
+                            header = T,
+                            stringsAsFactors = F,
+                            sep = ";")
+wood_list_raw <- read.csv("./data/Gesamtholzliste_Bielersee.csv",
+                            na.strings = c("-","---", "----"), header=T,
+                            stringsAsFactors = F, sep=";",
+                            fileEncoding="utf8") # %>% enc2utf8()
 
 
 wood_list <- wood_list_raw %>%
     dplyr::select(Gemeinde,Flur,DNr,Qf,Fo,xLK,yLK,xLK95,yLK95) %>%
     dplyr::rename(Nr = DNr) %>%
-    dplyr::mutate(Nr = as.integer(Nr)) %>%
+    dplyr::mutate(Nr = as.integer(Nr), Qf = as.integer(Qf), Fo = as.integer(Fo)) %>%
+    dplyr::mutate(xLK = as.numeric(xLK), yLK = as.numeric(yLK), xLK95 = as.numeric(xLK95), yLK95 = as.numeric(yLK95)) %>%
     dplyr::filter(!is.na(Nr))
 
 LK95 <- wood_list %>%
@@ -48,4 +54,4 @@ spatial_data_LK03 <- SpatialPointsDataFrame(coords03,
 
 spatial_data <- rbind(spatial_data_LK95,spatial_data_LK03)
 
-saveRDS(spatial_data,file="PrehistoricSeeland/data/woods_sp.Rds")
+saveRDS(spatial_data,file="./PrehistoricSeeland/data/woods_sp.Rds")

@@ -128,6 +128,45 @@ server <- shinyServer(function(input, output, session) {
     leafletProxy("map") %>%
       hideGroup(hide_groups)
   })
+  
+  observeEvent(input$wood_type, {
+    g_wk <- paste0(WK_PREFIX, as.character(input$year))
+    g_nwk <- paste0(NWK_PREFIX, as.character(input$year))
+    
+    hide_groups <-
+      init$all_groups[!init$all_groups %in% c(g_wk, g_nwk)]
+    
+    if(input$wood_type == 2) {
+      if (g_nwk %in% init$all_groups) {
+        leafletProxy("map") %>%
+          hideGroup(g_nwk)
+      }
+      if (g_wk %in% init$all_groups) {
+        leafletProxy("map") %>%
+          showGroup(g_wk)
+      }  
+    } else if(input$wood_type == 3) {
+      if (g_nwk %in% init$all_groups) {
+        leafletProxy("map") %>%
+          showGroup(g_nwk)
+      }
+      if (g_wk %in% init$all_groups) {
+        leafletProxy("map") %>%
+          hideGroup(g_wk)
+      }
+    } else {
+      if (g_wk %in% init$all_groups) {
+        leafletProxy("map") %>%
+          showGroup(g_wk)
+      }
+      if (g_nwk %in% init$all_groups) {
+        leafletProxy("map") %>%
+          showGroup(g_nwk)
+      }
+    }
+    leafletProxy("map") %>%
+      hideGroup(hide_groups)
+  })
 })
 
 shinyApp(ui, server)

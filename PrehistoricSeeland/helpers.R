@@ -35,7 +35,7 @@ prepareMap <- function(spatial_data){
         addProviderTiles(providers$Stamen.TonerLite,
                          options = providerTileOptions(noWrap = TRUE)
         ) %>%
-        setView(lng = center_lng, lat = center_lat,zoom=12)
+        setView(lng = center_lng, lat = center_lat,zoom=10)
 
     for (y in min_yr:max_yr){
 
@@ -56,10 +56,8 @@ prepareMap <- function(spatial_data){
                                             group = g_wk,
                                             fillOpacity=~alpha,
                                             fillColor = ~colorWood(as.numeric(!is.na(WK))),
-                                            radius = 5,
-                                            label = ~HTML(paste(sep = "<br />",
-                                                                span(strong(Titel)),
-                                                                span(paste0("Nr.: ",Nr)))),
+                                            radius = ~alpha*5,
+                                            label = ~Titel,
                                             clusterOptions = markerClusterOptions(
                                                 spiderfyOnMaxZoom = F,
                                                 disableClusteringAtZoom = 19,
@@ -77,10 +75,8 @@ prepareMap <- function(spatial_data){
                                             group = g_nwk,
                                             fillOpacity=~alpha,
                                             fillColor = ~colorWood(as.numeric(!is.na(WK))),
-                                            radius = 5,
-                                            label = ~HTML(paste(sep = "<br />",
-                                                                span(strong(Titel)),
-                                                                span(paste0("Nr.: ",Nr)))),
+                                            radius = ~alpha*5,
+                                            label = ~Titel,
                                             clusterOptions = markerClusterOptions(
                                                 spiderfyOnMaxZoom = F,
                                                 disableClusteringAtZoom = 19,
