@@ -10,7 +10,6 @@ wood_list_raw <- read.csv("./data/Gesamtholzliste_Bielersee.csv",
                             stringsAsFactors = F, sep=";",
                             fileEncoding="utf8") # %>% enc2utf8()
 
-
 wood_list <- wood_list_raw %>%
     dplyr::select(Gemeinde,Flur,DNr,Qf,Fo,xLK,yLK,xLK95,yLK95) %>%
     dplyr::rename(Nr = DNr) %>%
@@ -29,8 +28,19 @@ LK03 <- wood_list %>%
 
 dated_woods <- dated_woods_raw %>%
     dplyr::filter(!is.na(Dat)) %>%
-    dplyr::select(Nr,Dat,WK,Sp,Anz,Ma,Art,Titel) %>%
-    dplyr::mutate(Titel = as.character(Titel))
+    dplyr::select(Nr,Dat,Sp_Dat, Wk_Dat,WK,Sp,Anz,Ma,Art,Titel) %>%
+    dplyr::mutate(wood_type = case_when(
+        !is.na(Sp_Dat) ~ "Sp",
+        !is.na(Wk_Dat) ~ "Wk",
+        TRUE ~ "Ke"
+    )) %>%
+    dplyr::mutate(Dat = case_when(
+        !is.na(Sp_Dat) ~ Sp_Dat,
+        !is.na(Wk_Dat) ~ Wk_Dat,
+        TRUE ~ Dat
+    )) %>%
+    dplyr::mutate(Titel = as.character(Titel)) %>%
+    dplyr::select(-one_of(c('Sp_Dat', 'Wk_Dat')))
 
 dated_woods$WK <- as.integer(dated_woods$WK)
 #levels(dated_woods$WK) <- sub("^>[0-9]{1,3}", "",levels(dated_woods$WK))

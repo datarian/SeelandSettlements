@@ -1,5 +1,6 @@
 library(dplyr)
 library(sp)
+library(leaflet)
 
 # Prepare data:
 spatial_data <- readRDS("./data/woods_sp.Rds") # Read spdataframe
@@ -9,14 +10,23 @@ min_yr <- min(spatial_data$Dat) - 5
 max_yr <- max(spatial_data$Dat) + 5
 
 WK_PREFIX = "wk_"
-NWK_PREFIX = "nwk_"
+SP_PREFIX = "sp_"
+KE_PREFIX = "ke_"
 
-colorWood <- colorFactor(palette='Spectral',levels=c(0,1))
+colorWood <- colorFactor(palette=c("#000000", "#ffcc00", "#9d5152"),levels=c("Wk","Sp", "Ke"))
 
 calcAlpha <- function(currentYear, sampleYear){
     difference <- (currentYear - sampleYear)
     alpha <- ifelse(difference < 10, (10 - difference)/10,0)
 }
+
+clusterCreateFunction <- JS("function (cluster) {
+    var childCount = cluster.getChildCount();
+    
+    var c = ' marker-cluster-custom';
+    
+    return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+}")
 
 
 # Initialize map and build up all layers and groups
@@ -39,9 +49,10 @@ prepareMap <- function(spatial_data){
 
     for (y in min_yr:max_yr){
 
-        year_markers = spatial_data[spatial_data$Dat %in% (y-10):y, ]
-        year_markers_wk = year_markers[!is.na(year_markers$WK),]
-        year_markers_nwk = year_markers[is.na(year_markers$WK),]
+        year_markers = spatial_data[spatial_data$Dat %in% (y-10):y,]
+        year_markers_wk = year_markers[year_markers$wood_type == "Wk",]
+        year_markers_sp = year_markers[year_markers$wood_type == "Sp",]
+        year_markers_ke = year_markers[year_markers$wood_type == "Ke",]
 
         g = as.character(y)
 
@@ -55,33 +66,55 @@ prepareMap <- function(spatial_data){
                                             stroke=FALSE,
                                             group = g_wk,
                                             fillOpacity=~alpha,
-                                            fillColor = ~colorWood(as.numeric(!is.na(WK))),
-                                            radius = ~alpha*5,
+                                            fillColor = ~colorWood("Wk"),
+                                            radius = 5,
                                             label = ~Titel,
                                             clusterOptions = markerClusterOptions(
                                                 spiderfyOnMaxZoom = F,
                                                 disableClusteringAtZoom = 19,
-                                                zoomToBoundsOnClick = T))
+                                                zoomToBoundsOnClick = T,
+                                                iconCreateFunction = clusterCreateFunction))
             hideGroup(map, g_wk)
         }
-        if(nrow(year_markers_nwk) > 0){
-            g_nwk = paste0(NWK_PREFIX, g)
-            all_groups <- append(all_groups, g_nwk)
-            for (i in 1:nrow(year_markers_nwk)) {
-                year_markers_nwk$alpha[i] <- calcAlpha(y, year_markers_nwk$Dat[i])
+        if(nrow(year_markers_sp) > 0){
+            g_sp = paste0(SP_PREFIX, g)
+            all_groups <- append(all_groups, g_sp)
+            for (i in 1:nrow(year_markers_sp)) {
+                year_markers_sp$alpha[i] <- calcAlpha(y, year_markers_sp$Dat[i])
             }
-            map <- map %>% addCircleMarkers(data=year_markers_nwk,
+            map <- map %>% addCircleMarkers(data=year_markers_sp,
                                             stroke=FALSE,
-                                            group = g_nwk,
+                                            group = g_sp,
                                             fillOpacity=~alpha,
-                                            fillColor = ~colorWood(as.numeric(!is.na(WK))),
-                                            radius = ~alpha*5,
+                                            fillColor = ~colorWood("Sp"),
+                                            radius = 5,
                                             label = ~Titel,
                                             clusterOptions = markerClusterOptions(
                                                 spiderfyOnMaxZoom = F,
                                                 disableClusteringAtZoom = 19,
-                                                zoomToBoundsOnClick = T))
-            hideGroup(map, g_nwk)
+                                                zoomToBoundsOnClick = T,
+                                                iconCreateFunction = clusterCreateFunction))
+            hideGroup(map, g_sp)
+        }
+        if(nrow(year_markers_ke) > 0){
+            g_ke = paste0(KE_PREFIX, g)
+            all_groups <- append(all_groups, g_ke)
+            for (i in 1:nrow(year_markers_ke)) {
+                year_markers_ke$alpha[i] <- calcAlpha(y, year_markers_ke$Dat[i])
+            }
+            map <- map %>% addCircleMarkers(data=year_markers_ke,
+                                            stroke=FALSE,
+                                            group = g_ke,
+                                            fillOpacity=~alpha,
+                                            fillColor = ~colorWood("Ke"),
+                                            radius = 5,
+                                            label = ~Titel,
+                                            clusterOptions = markerClusterOptions(
+                                                spiderfyOnMaxZoom = F,
+                                                disableClusteringAtZoom = 19,
+                                                zoomToBoundsOnClick = T,
+                                                iconCreateFunction = clusterCreateFunction))
+            hideGroup(map, g_ke)
         }
     }
     results <- list("all_groups" = all_groups, "map" = map)
