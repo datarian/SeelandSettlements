@@ -1,0 +1,38 @@
+#controls {background-color: rgba(255,255,255,0.8);
+          padding: 0.2em;
+          z-index:2000;}
+.glyphicon {
+font-size: 1.5em;
+line-height: 1.5;}
+.dot {
+ height: 1em;
+ width: 1em;
+ border-radius: 50%;
+ display: inline-block;
+}
+.panel {
+    margin: 0;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
+    -moz-box-shadow: 0 1px 1px rgba(0,0,0,.05);
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+
+#year-range {
+  width: 100%;
+}
+
+.dot .dot-nwk {
+ background-color: #ffcc00;
+}
+.dot .dot-wk {
+ background-color: #000000;
+}
+.marker-cluster-custom {
+  background-color: rgba(114, 57, 204, 0.4);
+}
+.marker-cluster-custom div {
+  background-color: rgba(114, 57, 204, 0.4);
+}
