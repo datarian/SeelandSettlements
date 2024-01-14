@@ -42,7 +42,7 @@ prepareMap <- function(spatial_data){
     all_groups <- c()
 
     map <- leaflet(options = leafletOptions(maxZoom = 20)) %>%
-        addProviderTiles(providers$Stamen.TonerLite,
+        addProviderTiles(providers$Stadia.StamenTonerLite,
                          options = providerTileOptions(noWrap = TRUE)
         ) %>%
         setView(lng = center_lng, lat = center_lat,zoom=10)
