@@ -5,8 +5,7 @@ account: datarian
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 329869
-bundleId: 2598793
+bundleId: 8142480
 url: https://datarian.shinyapps.io/PrehistoricSeeland/
-when: 1574113478.17619
 asMultiple: FALSE
 asStatic: FALSE
