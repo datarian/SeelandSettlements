@@ -49,6 +49,9 @@ ui <- fillPage(
 
 server <- shinyServer(function(input, output, session) {
   output$map <- renderLeaflet(init$map)
+  
+  # update animation interval
+  animation <- reactiveValues(speed = 100, year = min_yr)
 
   output$year_range <- renderUI({
     sliderInput(
@@ -56,7 +59,7 @@ server <- shinyServer(function(input, output, session) {
       "Zeit",
       min = min_yr,
       max = max_yr,
-      value = isolate(animation$year),
+      value = min_yr+1,
       step = 1,
       sep = "'",
       animate = animationOptions(
@@ -76,8 +79,6 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  # update animation interval
-  animation <- reactiveValues(speed = 100, year = min_yr)
 
   observeEvent(input$speed, {
     invalidateLater(500, session)
