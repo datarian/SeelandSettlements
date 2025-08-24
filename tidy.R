@@ -55,4 +55,10 @@ spatial_data_LK95 <- st_transform(spatial_data_LK95, 4326)
 spatial_data_LK95 <- spatial_data_LK95 %>%
   select(-c(xLK, yLK, xLK95, yLK95))
 
+# Before saving, ensure UTF-8 encoding
+char_cols <- names(spatial_data_LK95)[sapply(st_drop_geometry(spatial_data_LK95), is.character)]
+for(col in char_cols) {
+  spatial_data_LK95[[col]] <- iconv(spatial_data_LK95[[col]], from = "latin1", to = "UTF-8", sub = "")
+}
+
 saveRDS(spatial_data_LK95, file="./PrehistoricSeeland/data/woods_sp.Rds")
