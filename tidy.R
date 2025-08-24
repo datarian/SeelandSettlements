@@ -33,11 +33,11 @@ dated_woods <- dated_woods_raw %>%
     !is.na(Wk_Dat) ~ Wk_Dat,
     TRUE ~ Dat
   )) %>%
+  dplyr::filter(Dat < 0) %>%
   dplyr::mutate(Titel = as.character(Titel)) %>%
   dplyr::select(-one_of(c('Sp_Dat', 'Wk_Dat')))
 
 dated_woods$WK <- as.integer(dated_woods$WK)
-#levels(dated_woods$WK) <- sub("^>[0-9]{1,3}", "",levels(dated_woods$WK))
 
 combined_coordsLK95_dates <- dplyr::left_join(dated_woods,LK95,by="Nr") %>% filter(!is.na(yLK95))
 
