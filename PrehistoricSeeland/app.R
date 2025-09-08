@@ -27,7 +27,7 @@ ui <- fillPage(
   leafletOutput("map", width = "100%", height = "100%"),
   absolutePanel(
     id = "controls",
-    class = "panel panel-default row align-items-center",
+    class = "panel panel-default",
     fixed = TRUE,
     draggable = TRUE,
     top = "auto",
@@ -35,21 +35,52 @@ ui <- fillPage(
     left = "2%",
     bottom = "10",
     width = "96%",
-    height = "8em",
-    div(class="col-sm-6",
-      uiOutput("year_range")),
-    div(class="col-sm-3",
-    sliderInput(
-      "speed",
-      "Geschwindigkeit der Animation",
-      min = 1,
-      max = 10,
-      value = 5,
-      step = 1,
-      ticks = F
-    )),
-    div(class="col-sm-3",
-      uiOutput("select_wood"))
+    height = "auto",
+    
+    div(class = "container-fluid",
+      div(class = "row align-items-center",
+        # Year slider section
+        div(class = "col-md-5",
+          div(class = "control-section",
+            h5("Zeit", class = "control-label"),
+            div(class = "slider-container",
+              uiOutput("year_range"),
+              div(id = "animation_controls",
+                div(id = "play_pause_container"),
+                div(id = "manual_controls", style = "display: none;",
+                  actionButton("year_back", "", icon = icon("chevron-left"), 
+                               class = "btn btn-secondary control-btn"),
+                  actionButton("year_forward", "", icon = icon("chevron-right"), 
+                               class = "btn btn-secondary control-btn")
+                )
+              )
+            )
+          )
+        ),
+        
+        # Speed control section  
+        div(class = "col-md-3",
+          div(class = "control-section",
+            sliderInput(
+              "speed",
+              "Geschwindigkeit",
+              min = 1,
+              max = 10,
+              value = 5,
+              step = 1,
+              ticks = F
+            )
+          )
+        ),
+        
+        # Wood selection section
+        div(class = "col-md-4",
+          div(class = "control-section",
+            uiOutput("select_wood")
+          )
+        )
+      )
+    )
   )
 )
 
@@ -97,10 +128,23 @@ server <- shinyServer(function(input, output, session) {
   
   output$current_year_display <- renderText({
     if(is.null(input$year)) {
-      as.character(min_yr+1)
+      as.character(min_yr)
     } else {
       as.character(input$year)
     }
+  })
+  
+  # Handle manual year navigation
+  observeEvent(input$year_forward, {
+    current_year <- input$year %||% (min_yr + 1)
+    new_year <- if(current_year >= max_yr) min_yr else current_year + 1
+    updateSliderInput(session, "year", value = new_year)
+  })
+  
+  observeEvent(input$year_back, {
+    current_year <- input$year %||% (min_yr + 1)
+    new_year <- if(current_year <= min_yr) max_yr else current_year - 1
+    updateSliderInput(session, "year", value = new_year)
   })
   
   output$select_wood <- renderUI({

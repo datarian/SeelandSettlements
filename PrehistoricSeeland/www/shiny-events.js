@@ -19,6 +19,9 @@ $(function() {
         console.log('Starting custom animation with speed:', currentSpeed);
         isCustomAnimating = true;
         
+        // Hide manual controls when animating
+        $('#manual_controls').hide();
+        
         customAnimationInterval = setInterval(function() {
             var $slider = $('#year');
             if ($slider.length === 0) return;
@@ -44,6 +47,13 @@ $(function() {
             customAnimationInterval = null;
         }
         isCustomAnimating = false;
+        
+        // Show manual controls when paused
+        console.log('Showing manual controls');
+        var $controls = $('#manual_controls');
+        console.log('Controls element found:', $controls.length);
+        $controls.show();
+        $controls.css('display', 'flex');
     }
     
     // Override play/pause buttons when they appear
@@ -76,15 +86,22 @@ $(function() {
             setTimeout(function() {
                 var $button = $('.slider-animate-button');
                 if ($button.length > 0) {
+                    // Move play/pause button to our custom container
+                    $button.detach().appendTo('#play_pause_container');
+                    $button.addClass('control-btn');
+                    
                     var $playIcon = $button.find('.glyphicon-play');
                     var $pauseIcon = $button.find('.glyphicon-pause');
                     
                     if (isCustomAnimating) {
                         $playIcon.hide();
                         $pauseIcon.show();
+                        $('#manual_controls').hide();
                     } else {
                         $playIcon.show();
                         $pauseIcon.hide();
+                        $('#manual_controls').show();
+                        $('#manual_controls').css('display', 'flex');
                     }
                 }
             }, 100);
