@@ -22,7 +22,8 @@
 }
 
 .slider-container {
-  /* Container for slider and controls */
+  position: relative;
+  margin-right: 60px; /* Space for the controls */
 }
 
 .glyphicon {
@@ -83,11 +84,14 @@
 }
 
 #animation_controls {
+  position: absolute;
+  right: -50px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex !important;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
-  justify-content: center;
-  margin-top: 8px;
+  z-index: 10;
 }
 
 #manual_controls {
