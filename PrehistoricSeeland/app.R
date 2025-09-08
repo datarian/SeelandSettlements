@@ -17,6 +17,13 @@ ui <- fillPage(
     singleton(tags$script(src = 'shiny-events.js'))),
   includeCSS("www/custom.css"),
   titlePanel("Prehistoric Seeland Settlements in Time"),
+  absolutePanel(
+    id = "year_display",
+    fixed = TRUE,
+    top = "10px",
+    right = "10px",
+    textOutput("current_year_display")
+  ),
   leafletOutput("map", width = "100%", height = "100%"),
   absolutePanel(
     id = "controls",
@@ -88,6 +95,14 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$speed, {
     session$sendCustomMessage('resume', TRUE)
+  })
+  
+  output$current_year_display <- renderText({
+    if(is.null(input$year)) {
+      as.character(min_yr+1)
+    } else {
+      as.character(input$year)
+    }
   })
   
   output$select_wood <- renderUI({
