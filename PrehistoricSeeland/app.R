@@ -44,8 +44,8 @@ ui <- fillPage(
       "Geschwindigkeit der Animation",
       min = 1,
       max = 10,
-      value = 1,
-      step = 2,
+      value = 5,
+      step = 1,
       ticks = F
     )),
     div(class="col-sm-3",
@@ -66,11 +66,11 @@ server <- shinyServer(function(input, output, session) {
       "Zeit",
       min = min_yr,
       max = max_yr,
-      value = min_yr+1,
+      value = isolate(input$year) %||% (min_yr+1),
       step = 1,
       sep = "'",
       animate = animationOptions(
-        interval = animation$speed,
+        interval = 2000,  # Start with default speed
         loop = T,
         playButton = HTML(
           '<span class="play">
@@ -88,13 +88,11 @@ server <- shinyServer(function(input, output, session) {
 
 
   observeEvent(input$speed, {
-    invalidateLater(500, session)
-    animation$speed <- 1000 / input$speed
-    animation$year <- input$year
-  })
-
-  observeEvent(input$speed, {
-    session$sendCustomMessage('resume', TRUE)
+    # Calculate new speed using exponential scaling for better distribution
+    new_speed <- 2000 * (0.7 ^ (input$speed - 1))
+    
+    # Send speed update to JavaScript
+    session$sendCustomMessage('update_animation_speed', list(speed = new_speed))
   })
   
   output$current_year_display <- renderText({
