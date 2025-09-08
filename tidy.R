@@ -33,7 +33,8 @@ dated_woods <- dated_woods_raw %>%
     !is.na(Wk_Dat) ~ Wk_Dat,
     TRUE ~ Dat
   )) %>%
-  dplyr::filter(Dat < 0) %>%
+  dplyr::filter(Dat > -4000) %>%
+  dplyr::filter(Dat < -2500) %>%
   dplyr::mutate(Titel = as.character(Titel)) %>%
   dplyr::select(-one_of(c('Sp_Dat', 'Wk_Dat')))
 
