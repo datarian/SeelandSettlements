@@ -42,7 +42,6 @@ ui <- fillPage(
         # Year slider section
         div(class = "col-md-5",
           div(class = "control-section",
-            h5("Zeit", class = "control-label"),
             div(class = "slider-container",
               uiOutput("year_range"),
               div(id = "animation_controls",
