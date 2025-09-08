@@ -3,9 +3,23 @@ $(function() {
     var isCustomAnimating = false;
     var currentSpeed = 2000;
     
+    // Function to immediately update slider visual display
+    function updateSliderDisplay($slider, value) {
+        // Update the input value
+        $slider.val(value);
+        $slider.trigger('change');
+        
+        // Force update the ionRangeSlider display if it exists
+        var sliderInstance = $slider.data("ionRangeSlider");
+        if (sliderInstance) {
+            sliderInstance.update({
+                from: value
+            });
+        }
+    }
+    
     // Handle animation speed updates from R
     Shiny.addCustomMessageHandler('update_animation_speed', function(message) {
-        console.log('Speed update received:', message.speed);
         currentSpeed = message.speed;
         
         // If custom animation is running, restart with new speed
@@ -16,7 +30,6 @@ $(function() {
     });
     
     function startCustomAnimation() {
-        console.log('Starting custom animation with speed:', currentSpeed);
         isCustomAnimating = true;
         
         // Hide manual controls when animating
@@ -33,15 +46,13 @@ $(function() {
             // Calculate next year (loop back to min if at max)
             var next = (current >= max) ? min : current + 1;
             
-            // Update slider value and trigger change event
-            $slider.val(next);
-            $slider.trigger('change');
+            // Update slider value and visual display immediately
+            updateSliderDisplay($slider, next);
             Shiny.setInputValue('year', next);
         }, currentSpeed);
     }
     
     function stopCustomAnimation() {
-        console.log('Stopping custom animation');
         if (customAnimationInterval) {
             clearInterval(customAnimationInterval);
             customAnimationInterval = null;
@@ -49,9 +60,7 @@ $(function() {
         isCustomAnimating = false;
         
         // Show manual controls when paused
-        console.log('Showing manual controls');
         var $controls = $('#manual_controls');
-        console.log('Controls element found:', $controls.length);
         $controls.show();
         $controls.css('display', 'flex');
     }
@@ -78,6 +87,33 @@ $(function() {
         }
         
         return false;
+    });
+    
+    // Handle manual navigation buttons for immediate visual feedback
+    $(document).on('click', '#year_forward', function() {
+        var $slider = $('#year');
+        if ($slider.length > 0) {
+            var current = parseInt($slider.val());
+            var min = parseInt($slider.attr('data-min') || $slider.data('min'));
+            var max = parseInt($slider.attr('data-max') || $slider.data('max'));
+            var next = (current >= max) ? min : current + 1;
+            
+            // Update display immediately
+            updateSliderDisplay($slider, next);
+        }
+    });
+    
+    $(document).on('click', '#year_back', function() {
+        var $slider = $('#year');
+        if ($slider.length > 0) {
+            var current = parseInt($slider.val());
+            var min = parseInt($slider.attr('data-min') || $slider.data('min'));
+            var max = parseInt($slider.attr('data-max') || $slider.data('max'));
+            var next = (current <= min) ? max : current - 1;
+            
+            // Update display immediately
+            updateSliderDisplay($slider, next);
+        }
     });
     
     // Initialize button state when slider loads

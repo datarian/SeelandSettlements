@@ -65,7 +65,7 @@ ui <- fillPage(
               "Geschwindigkeit",
               min = 1,
               max = 10,
-              value = 5,
+              value = 1,
               step = 1,
               ticks = F
             )
@@ -74,7 +74,7 @@ ui <- fillPage(
         
         # Wood selection section
         div(class = "col-md-4",
-          div(class = "control-section",
+          div(class = "control-section text-right",
             uiOutput("select_wood")
           )
         )
