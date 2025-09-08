@@ -19,10 +19,18 @@ ui <- fillPage(
   titlePanel("Prehistoric Seeland Settlements in Time"),
   absolutePanel(
     id = "year_display",
+    class = "draggable-year",
     fixed = TRUE,
     top = "10px",
     right = "10px",
-    textOutput("current_year_display")
+    textOutput("current_year_display"),
+    div(id = "year_input_container", style = "display: none;",
+      tags$input(type = "text", id = "year_jump_input", placeholder = "-3500", 
+                 style = "font-size: 2.2em; font-weight: 700; text-align: center; 
+                         background: rgba(255,255,255,0.95); border: 2px solid #007bff; 
+                         border-radius: 8px; padding: 8px 12px; color: #2c3e50; 
+                         width: 120px; outline: none;")
+    )
   ),
   leafletOutput("map", width = "100%", height = "100%"),
   absolutePanel(
@@ -144,6 +152,19 @@ server <- shinyServer(function(input, output, session) {
     current_year <- input$year %||% (min_yr + 1)
     new_year <- if(current_year <= min_yr) max_yr else current_year - 1
     updateSliderInput(session, "year", value = new_year)
+  })
+  
+  # Handle year jumping from custom message
+  observeEvent(input$year_jump_value, {
+    year_value <- input$year_jump_value
+    if (!is.null(year_value) && !is.na(year_value)) {
+      # Clamp the value to the valid range
+      clamped_year <- max(min_yr, min(max_yr, year_value))
+      updateSliderInput(session, "year", value = clamped_year)
+      
+      # Send message to hide input
+      session$sendCustomMessage('hide_year_input', TRUE)
+    }
   })
   
   output$select_wood <- renderUI({

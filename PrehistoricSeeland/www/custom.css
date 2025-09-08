@@ -71,6 +71,20 @@
   padding: 15px 25px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   z-index: 1000;
+  cursor: move;
+  user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#year_display:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+
+#year_display.dragging {
+  transform: scale(1.05);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  z-index: 1001;
 }
 
 #current_year_display {
@@ -81,6 +95,60 @@
   text-align: center;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#current_year_display:hover {
+  color: #007bff;
+}
+
+#year_input_container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#year_jump_input {
+  font-size: 2.2em !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  background: rgba(255,255,255,0.95) !important;
+  border: 2px solid #007bff !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  color: #2c3e50 !important;
+  width: 140px !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  box-sizing: border-box !important;
+}
+
+#year_jump_input:focus {
+  outline: none !important;
+  border-color: #0056b3 !important;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.25) !important;
+}
+
+#year_jump_input::placeholder {
+  color: #6c757d !important;
+  opacity: 0.7 !important;
+}
+
+/* Remove any spinner arrows */
+#year_jump_input::-webkit-outer-spin-button,
+#year_jump_input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+#year_jump_input {
+  -moz-appearance: textfield !important;
 }
 
 #animation_controls {
@@ -187,8 +255,18 @@
 /* Ensure the checkbox group container is right-aligned */
 .text-right .shiny-input-checkboxgroup {
   text-align: right;
+  display: inline-block;
+  width: auto;
 }
 
 .text-right .shiny-input-checkboxgroup .shiny-options-group {
   text-align: right;
+  display: inline-block;
+  width: auto;
+}
+
+.text-right .shiny-input-checkboxgroup .control-label {
+  text-align: right;
+  margin-bottom: 8px;
+  display: block;
 }
